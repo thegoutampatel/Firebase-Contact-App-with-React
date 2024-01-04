@@ -1,34 +1,62 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-
+import { Children, useEffect, useState } from "react";
+import NavBar from "./components/NavBar";
+import { collection, getDocs} from "firebase/firestore";
+import {db} from './config/firebase.jsx'
+import ContactContainer from "./components/ContactContainer.jsx";
+import SearchContainer from "./components/SearchContainer.jsx";
+import Modal from "./components/Modal.jsx";
+import AddAndUpdateContact from "./components/AddAndUpdateContact.jsx";
+import useDisclouse from "./hooks/UseDisclouse.jsx";
 function App() {
-  const [count, setCount] = useState(0)
+
+const [contacts, setContacts] = useState([]);
+
+const { isOpen, onClose, onOpen} = useDisclouse();
+// const [isOpen , setIsOpen] = useState(false);
+
+// const onOpen = () =>{
+//   setIsOpen(true);
+// }
+
+// const onClose = () =>{
+//   setIsOpen(false);
+// }
+
+useEffect(()=>{
+
+  const getContacts = async ()=>{
+      try {
+        const contactsRef = collection(db, "contacts");
+
+        const contactsSnapshot = await getDocs(contactsRef);
+
+        const contactList = contactsSnapshot.docs.map((doc)=> {
+          return{
+            id:doc.id,
+
+            ...doc.data()
+          }
+        });
+
+        setContacts(contactList);
+
+
+      } catch (error) {
+
+      }
+  }; 
+
+  getContacts();
+
+},[]);
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="max-w-[370px] mx-auto px-4">
+      <NavBar/>
+      <SearchContainer onOpen={onOpen}/>
+      <ContactContainer contacts={contacts} />
+      <AddAndUpdateContact onClose={onClose} isOpen={isOpen}/>
+    </div>
   )
 }
 
